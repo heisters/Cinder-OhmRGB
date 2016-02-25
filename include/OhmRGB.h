@@ -70,7 +70,7 @@ public:
 
     const static std::vector< std::vector< ID > > GRID_BY_INDEX;
 
-    enum class COLOR : const unsigned char {
+    enum class COLOR : unsigned char {
         RED = 0b00000001, GREEN = 0b00000010, BLUE = 0b00000100, NONE = 0b00000000,
         WHITE = 0b00000111
     };
