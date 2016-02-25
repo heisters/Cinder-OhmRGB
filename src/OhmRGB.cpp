@@ -1,6 +1,7 @@
 #include "OhmRGB.h"
 
 using namespace std;
+using namespace ohmrgb;
 
 const vector< vector< LEDs::ID > > LEDs::GRID_BY_INDEX{
     {
@@ -62,3 +63,15 @@ LEDs& LEDs::set( const ID &lid, const COLOR &c )
 
     return *this;
 }
+
+
+const vector< vector< Controls::ID > > Controls::GRID_BY_INDEX{
+	{ Controls::ID::GRID_1_1, Controls::ID::GRID_1_2, Controls::ID::GRID_1_3, Controls::ID::GRID_1_4, Controls::ID::GRID_1_5, Controls::ID::GRID_1_6, Controls::ID::GRID_1_7, Controls::ID::GRID_1_8 },
+	{ Controls::ID::GRID_2_1, Controls::ID::GRID_2_2, Controls::ID::GRID_2_3, Controls::ID::GRID_2_4, Controls::ID::GRID_2_5, Controls::ID::GRID_2_6, Controls::ID::GRID_2_7, Controls::ID::GRID_2_8 },
+	{ Controls::ID::GRID_3_1, Controls::ID::GRID_3_2, Controls::ID::GRID_3_3, Controls::ID::GRID_3_4, Controls::ID::GRID_3_5, Controls::ID::GRID_3_6, Controls::ID::GRID_3_7, Controls::ID::GRID_3_8 },
+	{ Controls::ID::GRID_4_1, Controls::ID::GRID_4_2, Controls::ID::GRID_4_3, Controls::ID::GRID_4_4, Controls::ID::GRID_4_5, Controls::ID::GRID_4_6, Controls::ID::GRID_4_7, Controls::ID::GRID_4_8 },
+	{ Controls::ID::GRID_5_1, Controls::ID::GRID_5_2, Controls::ID::GRID_5_3, Controls::ID::GRID_5_4, Controls::ID::GRID_5_5, Controls::ID::GRID_5_6, Controls::ID::GRID_5_7, Controls::ID::GRID_5_8 },
+	{ Controls::ID::GRID_6_1, Controls::ID::GRID_6_2, Controls::ID::GRID_6_3, Controls::ID::GRID_6_4, Controls::ID::GRID_6_5, Controls::ID::GRID_6_6, Controls::ID::GRID_6_7, Controls::ID::GRID_6_8 },
+	{ Controls::ID::GRID_7_1, Controls::ID::GRID_7_2, Controls::ID::GRID_7_3, Controls::ID::GRID_7_4, Controls::ID::GRID_7_5, Controls::ID::GRID_7_6, Controls::ID::GRID_7_7, Controls::ID::GRID_7_8 },
+	{ Controls::ID::GRID_8_1, Controls::ID::GRID_8_2, Controls::ID::GRID_8_3, Controls::ID::GRID_8_4, Controls::ID::GRID_8_5, Controls::ID::GRID_8_6, Controls::ID::GRID_8_7, Controls::ID::GRID_8_8 },
+};
