@@ -4,7 +4,61 @@
 #include <type_traits>
 
 namespace ohmrgb {
-	enum class LEDColor : unsigned char {
+	// http://wiki.lividinstruments.com/images/thumb/4/4d/Ohm64_MIDI_Defaults.png/600px-Ohm64_MIDI_Defaults.png
+
+	class Controls {
+	public:
+		enum class ID : std::size_t {
+			GRID_1_1 = 0, GRID_1_2 = 8, GRID_1_3 = 16, GRID_1_4 = 24, GRID_1_5 = 32, GRID_1_6 = 40, GRID_1_7 = 48, GRID_1_8 = 56,
+			GRID_2_1 = 1, GRID_2_2 = 9, GRID_2_3 = 17, GRID_2_4 = 25, GRID_2_5 = 33, GRID_2_6 = 41, GRID_2_7 = 49, GRID_2_8 = 57,
+			GRID_3_1 = 2, GRID_3_2 = 10, GRID_3_3 = 18, GRID_3_4 = 26, GRID_3_5 = 34, GRID_3_6 = 42, GRID_3_7 = 50, GRID_3_8 = 58,
+			GRID_4_1 = 3, GRID_4_2 = 11, GRID_4_3 = 19, GRID_4_4 = 27, GRID_4_5 = 35, GRID_4_6 = 43, GRID_4_7 = 50, GRID_4_8 = 59,
+			GRID_5_1 = 4, GRID_5_2 = 12, GRID_5_3 = 20, GRID_5_4 = 28, GRID_5_5 = 36, GRID_5_6 = 44, GRID_5_7 = 52, GRID_5_8 = 60,
+			GRID_6_1 = 5, GRID_6_2 = 13, GRID_6_3 = 21, GRID_6_4 = 29, GRID_6_5 = 37, GRID_6_6 = 45, GRID_6_7 = 53, GRID_6_8 = 61,
+			GRID_7_1 = 6, GRID_7_2 = 14, GRID_7_3 = 22, GRID_7_4 = 30, GRID_7_5 = 38, GRID_7_6 = 46, GRID_7_7 = 54, GRID_7_8 = 62,
+			GRID_8_1 = 7, GRID_8_2 = 15, GRID_8_3 = 23, GRID_8_4 = 31, GRID_8_5 = 39, GRID_8_6 = 47, GRID_8_7 = 55, GRID_8_8 = 63,
+
+			XFADE_L = 64, XFADE = 24, XFADE_R = 72,
+
+			SLIDE_1 = 23, SLIDE_2 = 22, SLIDE_3 = 15, SLIDE_4 = 14, SLIDE_5 = 5, SLIDE_6 = 7, SLIDE_7 = 6, SLIDE_8 = 4,
+			SLIDE_1_BT = 65, SLIDE_2_BT = 73, SLIDE_3_BT = 66, SLIDE_4_BT = 74, SLIDE_5_BT = 67, SLIDE_6_BT = 75, SLIDE_7_BT = 68, SLIDE_8_BT = 76,
+
+			F_1_1 = 69, F_1_2 = 70, F_1_3 = 71,
+			F_2_1 = 77, F_2_2 = 78, F_2_3 = 79,
+
+			KNOB_L_1_1 = 17, KNOB_L_1_2 = 16, KNOB_L_1_3 = 9, KNOB_L_1_4 = 8,
+			KNOB_L_2_1 = 19, KNOB_L_2_2 = 18, KNOB_L_2_3 = 11, KNOB_L_2_4 = 10,
+			KNOB_L_3_1 = 21, KNOB_L_3_2 = 20, KNOB_L_3_3 = 13, KNOB_L_3_4 = 12,
+
+			KNOB_R_1_1 = 3, KNOB_R_1_2 = 1, KNOB_R_1_3 = 0, KNOB_R_1_4 = 2,
+
+			BPM = 87
+		};
+
+		const static std::vector< std::vector< ID > > GRID_BY_INDEX;
+	};
+
+
+	class SysexCommand
+	{
+	public:
+		typedef unsigned char byte_t;
+		typedef std::vector< byte_t > bytes_t;
+
+		SysexCommand( const bytes_t& bytes );
+
+		operator bytes_t& ( ) { return getBytes(); }
+		bool operator == ( const SysexCommand &rhs ) { return mBytes == rhs.mBytes; }
+		bool operator != ( const SysexCommand &rhs ) { return !( *this == rhs ); }
+
+		bytes_t& getBytes() { return mBytes; }
+
+	protected:
+		std::vector< unsigned char > mBytes;
+
+	};
+
+	enum class LEDColor : SysexCommand::byte_t {
 		red = 0b00000001, green = 0b00000010, blue = 0b00000100, none = 0b00000000,
 		white = 0b00000111
 	};
@@ -20,24 +74,6 @@ namespace ohmrgb {
 	{
 		return (LEDColor)( static_cast<color_t>( a ) & static_cast<color_t>( b ) );
 	}
-
-
-	class SysexCommand
-	{
-	public:
-		typedef std::vector< unsigned char > bytes_t;
-
-		SysexCommand( const bytes_t& bytes );
-
-		operator std::vector< unsigned char >& ( ) { return getBytes(); }
-		bool operator == ( const SysexCommand &rhs ) { return mBytes == rhs.mBytes; }
-		bool operator != ( const SysexCommand &rhs ) { return !( *this == rhs ); }
-
-		std::vector< unsigned char >& getBytes() { return mBytes; }
-	protected:
-		std::vector< unsigned char > mBytes;
-
-	};
 
 	// http://wiki.lividinstruments.com/wiki/OhmRGB#OhmRGB_Sysex
 	/*
@@ -113,29 +149,39 @@ namespace ohmrgb {
 		SetAllLEDs& set( const ID &lid, const LEDColor &c );
 	};
 
+	/*
+	0A : Map Analog Inputs
+	F0 00 01 61 07 0A (25)*[LL HH] F7
+	
+	This command updates the MIDI map for all (25) Analog inputs. If HH is 00,
+	then LL specifies the 7-bit Control number, but only valid control numbers
+	00 to 78 are accepted. If HH is 01, then LL selects between 14-bit Control
+	numbers and Pitch Bend. In the latter case, LL between 60 and 6F specifies
+	a Pitch Bend message on Channel (1) through (16), respectively. Otherwise,
+	LL selects a 14-bit Control number, of which the only valid control numbers
+	are 00 to 1F. All other values for LL, 20 through 5F and 70 through 7F are
+	reserved for future use. Values of HH above 1 are similarly reserved.
+	
+	There are (25) sets of LL HH value pairs in this message, each
+	corresponding to the index of an Analog input. These indices do not
+	conveniently match up with the physical layout. The index codes are
+	arranged as follows (all indices are decimal in this table, and start with
+	0):
+	
+	crossfader: 24 eight faders, from left to right: 23, 22, 15, 14, 5, 7, 6, 4
+	upper left knobs: 17, 16, 9, 8 19, 18, 11, 10 21, 20, 13, 12 right knobs:
+	3, 1, 0, 2
 
-
-	// http://wiki.lividinstruments.com/images/thumb/4/4d/Ohm64_MIDI_Defaults.png/600px-Ohm64_MIDI_Defaults.png
-
-	class Controls {
+	The OhmRGB responds with ACK when finished processing this command.
+	*/
+	class MapAnalogInputs : public SysexCommand
+	{
 	public:
 		enum class ID : std::size_t {
-			GRID_1_1 = 0, GRID_1_2 = 8, GRID_1_3 = 16, GRID_1_4 = 24, GRID_1_5 = 32, GRID_1_6 = 40, GRID_1_7 = 48, GRID_1_8 = 56,
-			GRID_2_1 = 1, GRID_2_2 = 9, GRID_2_3 = 17, GRID_2_4 = 25, GRID_2_5 = 33, GRID_2_6 = 41, GRID_2_7 = 49, GRID_2_8 = 57,
-			GRID_3_1 = 2, GRID_3_2 = 10, GRID_3_3 = 18, GRID_3_4 = 26, GRID_3_5 = 34, GRID_3_6 = 42, GRID_3_7 = 50, GRID_3_8 = 58,
-			GRID_4_1 = 3, GRID_4_2 = 11, GRID_4_3 = 19, GRID_4_4 = 27, GRID_4_5 = 35, GRID_4_6 = 43, GRID_4_7 = 50, GRID_4_8 = 59,
-			GRID_5_1 = 4, GRID_5_2 = 12, GRID_5_3 = 20, GRID_5_4 = 28, GRID_5_5 = 36, GRID_5_6 = 44, GRID_5_7 = 52, GRID_5_8 = 60,
-			GRID_6_1 = 5, GRID_6_2 = 13, GRID_6_3 = 21, GRID_6_4 = 29, GRID_6_5 = 37, GRID_6_6 = 45, GRID_6_7 = 53, GRID_6_8 = 61,
-			GRID_7_1 = 6, GRID_7_2 = 14, GRID_7_3 = 22, GRID_7_4 = 30, GRID_7_5 = 38, GRID_7_6 = 46, GRID_7_7 = 54, GRID_7_8 = 62,
-			GRID_8_1 = 7, GRID_8_2 = 15, GRID_8_3 = 23, GRID_8_4 = 31, GRID_8_5 = 39, GRID_8_6 = 47, GRID_8_7 = 55, GRID_8_8 = 63,
+			XFADE = 24,
 
-			XFADE_L = 64, XFADE = 24, XFADE_R = 72,
-
-			SLIDE_1 = 23, SLIDE_2 = 22, SLIDE_3 = 15, SLIDE_4 = 14, SLIDE_5 = 5, SLIDE_6 = 7, SLIDE_7 = 6, SLIDE_8 = 4,
-			SLIDE_1_BT = 65, SLIDE_2_BT = 73, SLIDE_3_BT = 66, SLIDE_4_BT = 74, SLIDE_5_BT = 67, SLIDE_6_BT = 75, SLIDE_7_BT = 68, SLIDE_8_BT = 76,
-
-			F_1_1 = 69, F_1_2 = 70, F_1_3 = 71,
-			F_2_1 = 77, F_2_2 = 78, F_2_3 = 79,
+			SLIDE_1 = 23, SLIDE_2 = 22, SLIDE_3 = 15, SLIDE_4 = 14,
+			SLIDE_5 = 5, SLIDE_6 = 7, SLIDE_7 = 6, SLIDE_8 = 4,
 
 			KNOB_L_1_1 = 17, KNOB_L_1_2 = 16, KNOB_L_1_3 = 9, KNOB_L_1_4 = 8,
 			KNOB_L_2_1 = 19, KNOB_L_2_2 = 18, KNOB_L_2_3 = 11, KNOB_L_2_4 = 10,
@@ -143,10 +189,66 @@ namespace ohmrgb {
 
 			KNOB_R_1_1 = 3, KNOB_R_1_2 = 1, KNOB_R_1_3 = 0, KNOB_R_1_4 = 2,
 
-			BPM = 87
+			MIN = 0, MAX = 24
 		};
 
-		const static std::vector< std::vector< ID > > GRID_BY_INDEX;
+		// Map to a 7-bit control
+		enum class Control : byte_t {
+			MIN = 0x00, MAX = 0x78
+		};
+
+		// Map to a 14-bit pitch bend channel
+		enum class PitchBend : byte_t {
+			CHANNEL_1 = 0x60, CHANNEL_2, CHANNEL_3, CHANNEL_4, CHANNEL_5,
+			CHANNEL_6, CHANNEL_7, CHANNEL_8, CHANNEL_9, CHANNEL_10, CHANNEL_11,
+			CHANNEL_12, CHANNEL_13, CHANNEL_14, CHANNEL_15, CHANNEL_16,
+			MIN = 0x60, MAX = 0x6F
+		};
+		typedef PitchBend PB;
+
+		// Map to a 14-bit control
+		enum class ContinuousControl : byte_t {
+			C0 = 0x00, C1, C2, C3, C4, C5, C6, C7, C8, C9,
+			C10, C11, C12, C13,	C14, C15, C16, C17, C18, C19,
+			C20, C21, C22, C23, C24, C25, C26, C27,	C28, C29,
+			C30, C31,
+			MIN = 0x00, MAX = 0x1F
+		};
+		typedef ContinuousControl CC;
+
+		MapAnalogInputs();
+
+		MapAnalogInputs& set( const ID & id, const byte_t & LL, const byte_t & HH );
+		MapAnalogInputs& set( const ID & id, const Control & c );
+		MapAnalogInputs& set( const ID & id, const PitchBend & pb );
+		MapAnalogInputs& set( const ID & id, const ContinuousControl & cc );
+
+		template< typename T >
+		MapAnalogInputs& set( const ID & fromId, const ID & toId, const T & startV )
+		{
+			const int iFrom = (int)fromId;
+			const int iTo = (int)fromId;
+			const byte_t startByte = (byte_t)startV;
+
+			if ( startByte + ( iTo - iFrom ) > (byte_t)T::MAX ) {
+				throw std::out_of_range( "starting control value is too high to assign all requested ids" );
+			}
+
+			for ( int i = iFrom; i <= iTo; ++i ) {
+				set( (ID)i, (T)( startByte + ( i - iFrom ) ) );
+			}
+
+			return *this;
+		}
+
+		template< typename T >
+		MapAnalogInputs & setAll( const T & startV )
+		{
+			return set( ID::MIN, ID::MAX, startV );
+		}
+
+		template< typename T >
+		MapAnalogInputs( const T & startV ) : MapAnalogInputs() { setAll( startV ); }
 	};
 
 }

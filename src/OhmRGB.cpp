@@ -10,6 +10,38 @@ SysexCommand::SysexCommand( const bytes_t& bytes ) :
 
 }
 
+MapAnalogInputs::MapAnalogInputs() :
+	SysexCommand( { 0xF0, 0x00, 0x01, 0x61, 0x07, 0x0A } )
+{
+	for ( int i = 0; i < 50; ++i ) mBytes.push_back( 0x00 );
+	mBytes.push_back( 0xF7 );
+}
+
+MapAnalogInputs & ohmrgb::MapAnalogInputs::set( const ID & id, const byte_t & LL, const byte_t & HH )
+{
+	int iLL = (int)id * 2 + 6;
+	int iHH = iLL + 1;
+
+	mBytes[ iLL ] = LL;
+	mBytes[ iHH ] = HH;
+
+	return *this;
+}
+
+MapAnalogInputs& MapAnalogInputs::set( const ID &id, const Control& c )
+{
+	return set( id, (byte_t)c, 0x00 );
+}
+MapAnalogInputs& MapAnalogInputs::set( const ID &id, const PitchBend& pb )
+{
+	return set( id, (byte_t)pb, 0x01 );
+}
+MapAnalogInputs& MapAnalogInputs::set( const ID &id, const ContinuousControl& cc )
+{
+	return set( id, (byte_t)cc, 0x01 );
+}
+
+
 
 const vector< vector< SetAllLEDs::ID > > SetAllLEDs::GRID_BY_INDEX{
     {
