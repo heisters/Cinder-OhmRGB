@@ -4,6 +4,40 @@
 #include <type_traits>
 
 namespace ohmrgb {
+	enum class LEDColor : unsigned char {
+		red = 0b00000001, green = 0b00000010, blue = 0b00000100, none = 0b00000000,
+		white = 0b00000111
+	};
+
+	using color_t = std::underlying_type< LEDColor >::type;
+
+	inline LEDColor operator | ( LEDColor a, LEDColor b )
+	{
+		return (LEDColor)( static_cast<color_t>( a ) | static_cast<color_t>( b ) );
+	}
+
+	inline LEDColor operator & ( LEDColor a, LEDColor b )
+	{
+		return (LEDColor)( static_cast<color_t>( a ) & static_cast<color_t>( b ) );
+	}
+
+
+	class SysexCommand
+	{
+	public:
+		typedef std::vector< unsigned char > bytes_t;
+
+		SysexCommand( const bytes_t& bytes );
+
+		operator std::vector< unsigned char >& ( ) { return getBytes(); }
+		bool operator == ( const SysexCommand &rhs ) { return mBytes == rhs.mBytes; }
+		bool operator != ( const SysexCommand &rhs ) { return !( *this == rhs ); }
+
+		std::vector< unsigned char >& getBytes() { return mBytes; }
+	protected:
+		std::vector< unsigned char > mBytes;
+
+	};
 
 	// http://wiki.lividinstruments.com/wiki/OhmRGB#OhmRGB_Sysex
 	/*
@@ -47,7 +81,7 @@ namespace ohmrgb {
 
 	 80
 	 */
-	class LEDs {
+	class SetAllLEDs : public SysexCommand {
 	public:
 		enum class ID : std::size_t {
 			GRID_1_1 = 56, GRID_1_2 = 48, GRID_1_3 = 40, GRID_1_4 = 32, GRID_1_5 = 24, GRID_1_6 = 16, GRID_1_7 = 8, GRID_1_8 = 0,
@@ -71,35 +105,14 @@ namespace ohmrgb {
 
 		const static std::vector< std::vector< ID > > GRID_BY_INDEX;
 
-		enum class COLOR : unsigned char {
-			RED = 0b00000001, GREEN = 0b00000010, BLUE = 0b00000100, NONE = 0b00000000,
-			WHITE = 0b00000111
-		};
 
-		LEDs();
-		LEDs( const COLOR &c );
+		SetAllLEDs();
+		SetAllLEDs( const LEDColor &c );
 
-		LEDs& setAll( const COLOR &c );
-		LEDs& set( const ID &lid, const COLOR &c );
-
-		operator std::vector< unsigned char >& () { return getBytes(); }
-
-		std::vector< unsigned char >& getBytes() { return bytes; }
-	private:
-		std::vector< unsigned char > bytes;
+		SetAllLEDs& setAll( const LEDColor &c );
+		SetAllLEDs& set( const ID &lid, const LEDColor &c );
 	};
 
-	using color_t = std::underlying_type< LEDs::COLOR >::type;
-
-	inline LEDs::COLOR operator | ( LEDs::COLOR a, LEDs::COLOR b )
-	{
-		return (LEDs::COLOR)(static_cast<color_t>(a) | static_cast<color_t>(b));
-	}
-
-	inline LEDs::COLOR operator & ( LEDs::COLOR a, LEDs::COLOR b )
-	{
-		return (LEDs::COLOR)(static_cast<color_t>(a) & static_cast<color_t>(b));
-	}
 
 
 	// http://wiki.lividinstruments.com/images/thumb/4/4d/Ohm64_MIDI_Defaults.png/600px-Ohm64_MIDI_Defaults.png
